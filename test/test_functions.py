@@ -4,7 +4,7 @@ import time
 
 # Initializes (or selects) couchdb db
 def init_db_cdb(password):
-    couch = couchdb.Server(f'http://admin:{password}@localhost:5984/')
+    couch = couchdb.Server(f'http://Admin123:{password}@localhost:5984/')
 
     db_name = 'csce-a360-test'
 

@@ -7,7 +7,7 @@ import os
 # import schemas # schemas.py -- contains class definitions of all "tables"
 
 def init_db():
-    couch = couchdb.Server('http://admin:[YOUR_PASSWORD]@localhost:5984/')
+    couch = couchdb.Server('http://admin:[password]@localhost:5984/')
 
     db_name = 'csce-a360-moviedb'
 
@@ -15,6 +15,7 @@ def init_db():
         db = couch[db_name] # Select existing database
     else:
         db = couch.create(db_name) # Create new database
+        import_json_into_DB(db) # Fill the database with the JSON file
 
 # TODO: Take all necessary values
 #def fill_db(released, runtime, genre, plot, language, country, awards):
@@ -40,6 +41,15 @@ def import_json_into_DB(db):
 
     results = db.update(data)
     return
+
+testing = init_db()
+
+#Replication 
+#
+#trigger = replicate(source='csce-a360-moviedb',
+#                   target='csce-a360-moviedb-backkup',
+#                   create_target=True, 
+#                   continuous=True)
 
 
 # Get the release date (e.g., "14 Oct 1994") of a movie and return a date structure
