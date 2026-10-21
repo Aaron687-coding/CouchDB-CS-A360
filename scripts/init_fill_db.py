@@ -1,17 +1,21 @@
 import couchdb
 from datetime import date
+import json
+import os
 
 import schemas # schemas.py -- contains class definitions of all "tables"
 
 def init_db():
-    couch = couchdb.Server('http://admin:[YOUR_PASSWORD]@localhost:5984/')
+    couch = couchdb.Server('http://Admin123:password123!@localhost:5984/')
 
     db_name = 'csce-a360-moviedb'
 
     if db_name in couch:
         db = couch[db_name] # Select existing database
+        import_json_into_DB(db)
     else:
         db = couch.create(db_name) # Create new database
+        import_json_into_DB(db) # Fill the database with data from the JSON file
 
 # TODO: Take all necessary values
 def fill_db(released, runtime, genre, plot, language, country, awards):
@@ -20,6 +24,27 @@ def fill_db(released, runtime, genre, plot, language, country, awards):
     # Not tricky with people, since there shouldn't be any duplicate
     # entries (either role or MovieID should be different)
     return
+
+def import_json_file_into_python():
+    base_path = os.path.dirname(os.path.dirname(__file__))
+    file_path = os.path.join(base_path, 'movies', 'movies-250.json')
+    
+    with open(file_path, 'r') as file:
+        data = json.load(file)
+    return data
+
+
+
+
+def import_json_into_DB(db):
+    data = import_json_file_into_python()
+    
+    if isinstance(data, dict) and 'docs' in data:
+        data = data['docs']
+
+    results = db.update(data)
+    return
+
 
 # Get the release date (e.g., "14 Oct 1994") of a movie and return a date structure
 def convert_date(str_date):
