@@ -17,11 +17,14 @@ def init_db_cdb(password):
 
 # Initializes (and selects) MySQL db
 def init_db_sql(password):
-    # 1. Connect to the MySQL Server
+    # Connect to the MySQL Server
     db_connection = mysql.connector.connect(
         host="localhost",
         user="root",
-        password=password
+        password=password,
+        autocommit=True # To ensure that transactions managed to be complete before
+                        # The connection gets closed (previously INSERT/DELETE commands 
+                        # Would be silently rolled back, causing leftover entries)
     )
 
     cursor = db_connection.cursor()
@@ -42,6 +45,30 @@ def init_db_sql(password):
 
     return db_connection
 
+# Deletes couchdb db entirely (for it to be created in performance_test())
+def delete_db_cdb(password):
+    couch = couchdb.Server(f'http://admin:{password}@localhost:5984/')
+
+    db_name = 'csce-a360-test'
+
+    if db_name in couch:
+        del couch[db_name]
+
+# Deletes MySQL db entirely (for it to be created in performance_test())
+def delete_db_sql(password):
+    db_connection = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password=password,
+        autocommit=True
+    )
+
+    cursor = db_connection.cursor()
+    cursor.execute("DROP DATABASE IF EXISTS csceA360Test")
+
+    cursor.close()
+    db_connection.close()
+
 # CouchDB document adder func
 def add_doc(db):
     doc = {"Name": "Guido", "Favorite food": ["Apple", "Pear", "Orange"], "Age": 20 }
@@ -56,7 +83,7 @@ def add_entry(cursor, id):
     food = ["Apple", "Pear", "Orange"]
     for j in range(3):
         cursor.execute(  "INSERT INTO FAVORITE_FOOD (FoodID, PersonID, Food)"
-                        f"VALUES (NULL, {id}, {food[j]})") # auto_increment sees null and replaces it
+                        f"VALUES (NULL, {id}, '{food[j]}')") # auto_increment sees null and replaces it
 
 # Couchdb bulk delete func
 def delete_bulk_cdb(db):
@@ -95,13 +122,15 @@ def delete_manual_cdb(db):
 
 # MySQL bulk delete (just truncate the tables)
 def delete_bulk_sql(cursor):
+    cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
     cursor.execute("TRUNCATE TABLE PERSON")
     cursor.execute("TRUNCATE TABLE FAVORITE_FOOD")
+    cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
 
 # MySQL manual delete func
 def delete_manual_sql(cursor, id):
-    cursor.execute(f"DELETE FROM PERSON WHERE PersonID = {id}")
+    # Delete the FAVORITE_FOOD rows first to avoid the foreign constraint from
+    # Triggering an error (referencing a Person that doesn't exist)
     for i in range(3):
-        # Equation above tries to make id "start" from zero,
-        # Then adds one because all auto_increment values start from one (why not?)
-        cursor.execute(f"DELETE FROM FAVORITE_FOOD WHERE FoodID = {3 * (id - 3) + i + 1}")
+        cursor.execute(f"DELETE FROM FAVORITE_FOOD WHERE FoodID = {3 * (id - 1) + i + 1}")
+    cursor.execute(f"DELETE FROM PERSON WHERE PersonID = {id}")
