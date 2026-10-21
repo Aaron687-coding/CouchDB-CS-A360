@@ -140,7 +140,7 @@ def run_multiple_tests(num_runs):
           f"\t- Create database in MySQL:                {averages['init_s']} s\n" +
           f"\t- Add 100 queries to database:             {averages['add_s']} s\n\n" +
           f"\t- Bulk delete 100 queries from database:   {averages['del_s_b']} s\n" +
-          f"\t- Manual delete 100 queries from database: {averages['del_s_m']}\n")
+          f"\t- Manual delete 100 queries from database: {averages['del_s_m']} s\n")
 
     print("--------- MySQL vs. CouchDB Average Performance Metrics  ---------\n" +
           f"\t- CouchDB was {100 * (averages['init_s'] - averages['init_c']) / averages['init_s']}% faster than MySQL in initializing its database (and tables)\n" +
