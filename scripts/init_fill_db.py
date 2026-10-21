@@ -17,6 +17,8 @@ def init_db():
         db = couch.create(db_name) # Create new database
         import_json_into_DB(db) # Fill the database with the JSON file
 
+    return db
+
 # TODO: Take all necessary values
 #def fill_db(released, runtime, genre, plot, language, country, awards):
     # Continue along from here (shouldn't be that hard)
